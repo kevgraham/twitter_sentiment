@@ -4,6 +4,7 @@ public class Tweet {
 
     String created_at;
     String text;
+    User user;
 
     public String getCreated_at() {
         return created_at;
@@ -19,5 +20,13 @@ public class Tweet {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

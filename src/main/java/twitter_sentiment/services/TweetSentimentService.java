@@ -13,6 +13,7 @@ import twitter_sentiment.model.internal.TweetSentiment;
 import twitter_sentiment.model.sentiment.ToneResponse;
 import twitter_sentiment.model.sentiment.ToneScore;
 import twitter_sentiment.model.twitter.Tweet;
+import twitter_sentiment.model.twitter.User;
 import twitter_sentiment.utilities.AuthUtil;
 
 import java.util.ArrayList;
@@ -51,8 +52,11 @@ public class TweetSentimentService {
      */
     public ToneResponse sentimentAnalysis(String query) {
 
+        // get rid of links
+        String cleanQuery = query.replaceAll("http\\S+", "");
+
         // build url
-        String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+query;
+        String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+cleanQuery;
 
         // create new header with authorization String
         HttpHeaders headers = AuthUtil.createWatsonHeader(username, password);
@@ -98,23 +102,49 @@ public class TweetSentimentService {
      */
     public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) {
 
+        // build ArrayList of TweetSentiment
+        ArrayList<TweetSentiment> output = new ArrayList<>();
+
         // pull recent tweets
         Tweet[] tweets = recentTweets(user, count);
 
-        // build ArrayList of TweetSentiment
-        ArrayList<TweetSentiment> output = new ArrayList<>();
+        // iterate through recent tweets
         for (int i = 0; i < tweets.length; i++) {
-            // get ToneScores for specific tweet
-            ToneScore[] tones = sentimentAnalysis(tweets[i].getText()).getDocument_tone().getTones();
 
-            // map TweetSentiment Object
-            TweetSentiment temp = mapTweetSentiment(tweets[i], tones);
+            // check if already in database
+            TweetSentiment temp = findSpecificTweet(tweets[i].getText());
+            if (temp == null) {
+
+
+                // get ToneScores for specific tweet
+                System.out.print("getting from api");
+                ToneScore[] tones = sentimentAnalysis(tweets[i].getText()).getDocument_tone().getTones();
+
+                // map TweetSentiment Object
+                temp = mapTweetSentiment(tweets[i], tones);
+
+                // add TweetSentiment to Tweet Database Table
+                System.out.println("...adding to database");
+                tweetSentimentMapper.insertTweet(temp);
+
+                // add user to User Database Table
+                if (findUserByScreenName(tweets[i].getUser().getScreen_name()) == null) {
+                    tweetSentimentMapper.insertUser(tweets[i].getUser());
+                }
+
+                // add lookup UserTweet Database Table
+                int user_id = findIdByUserName(tweets[i].getUser().getScreen_name());
+                int tweet_id = findIdByTweet(tweets[i].getText());
+                insertUserTweet(user_id, tweet_id);
+
+
+            } else {
+                System.out.println("getting from database");
+            }
 
             // add TweetSentiment to result ArrayList
             output.add(temp);
 
-            // add TweetSentiment to TweetSentiment Database Table
-            tweetSentimentMapper.insertTweet(temp);
         }
 
         return output;
@@ -170,7 +200,74 @@ public class TweetSentimentService {
      * @param tone to query
      * @return an ArrayList of tweet sentiment data
      */
-    public ArrayList<TweetSentiment> findTweets(String tone) {
+    public ArrayList<TweetSentiment> findTweetsByTone(String tone) {
         return tweetSentimentMapper.findTweets(tone);
+    }
+
+    /**
+     * Pulls tweet sentiment data of a given user
+     * @param user
+     * @return
+     */
+    public ArrayList<TweetSentiment> findTweetsByUser(String user) {
+        return tweetSentimentMapper.findTweetsByUser(user);
+    }
+
+    /**
+     * Pulls tweet that matches text
+     * @param text to query
+     * @return a TweetSentiment Object
+     */
+    public TweetSentiment findSpecificTweet(String text) {
+        ArrayList<TweetSentiment> temp = tweetSentimentMapper.findSpecificTweet(text);
+
+        if (temp.size() > 0) {
+            return temp.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Pulls user that matches a twitter handle
+     * @param screen_name to query
+     * @return a User Object
+     */
+    public User findUserByScreenName(String screen_name) {
+        ArrayList<User> temp = tweetSentimentMapper.findUserByScreenName(screen_name);
+
+        if (temp.size() > 0) {
+            return temp.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Pulls the id that matches a twitter handle
+     * @param screen_name to query
+     * @return int id
+     */
+    public int findIdByUserName(String screen_name) {
+        return tweetSentimentMapper.findIdByScreenName(screen_name);
+    }
+
+    /**
+     * Pulls the id that matches a tweet
+     * @param text to query
+     * @return int id
+     */
+    public int findIdByTweet(String text) {
+        return tweetSentimentMapper.findIdByTweet(text);
+    }
+
+    /**
+     * Inserts a User Tweet entry in the Lookup Table
+     * @param user_id
+     * @param tweet_id
+     * @return
+     */
+    public int insertUserTweet(int user_id, int tweet_id) {
+        return tweetSentimentMapper.insertUserTweet(user_id, tweet_id);
     }
 }

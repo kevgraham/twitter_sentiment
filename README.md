@@ -15,17 +15,13 @@ A tone is one of the following:
 ## Endpoints
 
 ```
-/sentiment?q={text}
-```
-
-```
-/tweet?user={twitter_handle}&count={count}
-```
-
-```
 /analyze?user={twitter_handle}&count={count}
 ```
+Searches and analyzes the most recent tweets of a user
+
 
 ```
-/find?tone={tone_id}
+/retrieve?tone={tone_id}
 ```
+Pulls tweets of a given tone from the database
+

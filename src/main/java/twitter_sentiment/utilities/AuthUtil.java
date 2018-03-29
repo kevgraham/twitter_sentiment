@@ -88,7 +88,6 @@ public class AuthUtil {
         // create header
         HttpHeaders header = new HttpHeaders();
         header.set("Authorization", authorization);
-        System.out.println("\nHeader: " + header + "\n");
         return header;
     }
 
