@@ -34,17 +34,30 @@ public class TweetSentimentController {
      * @return an array of tweets
      */
     @RequestMapping(method = RequestMethod.GET, value = "/tweets")
-    public Tweet[] getTweets(@RequestParam(value="user") String user) {
-        return tweetSentimentService.recentTweets(user);
+    public Tweet[] getTweets(@RequestParam(value="user") String user,
+                             @RequestParam(value="count", required=false) Integer count) {
+        return tweetSentimentService.recentTweets(user, count);
     }
 
     /**
      * Analyzes the most recent tweets of a given user
      * @param user twitter handle
-     * @return an arraylist of sentiment data on tweets
+     * @return an ArrayList of sentiment data on tweets
      */
     @RequestMapping(method = RequestMethod.GET, value = "/analyze")
-    public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="user") String user) {
-        return tweetSentimentService.analyzeTweets(user);
+    public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="user") String user,
+                                                   @RequestParam(value="count", required=false) Integer count) {
+
+        return tweetSentimentService.analyzeTweets(user, count);
+    }
+
+    /**
+     * Pull tweets with the given tone from the database
+     * @param tone to query
+     * @return an ArrayList of sentiment data on tweets
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/find")
+    public ArrayList<TweetSentiment> findTweets(@RequestParam(value="tone") String tone) {
+        return tweetSentimentService.findTweets(tone);
     }
 }

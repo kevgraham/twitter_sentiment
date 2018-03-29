@@ -2,9 +2,9 @@ package twitter_sentiment.model.sentiment;
 
 public class SentenceTone {
 
-    int sentence_id;
-    String text;
-    ToneScore[] tones;
+    private int sentence_id;
+    private String text;
+    private ToneScore[] tones;
 
     public int getSentence_id() {
         return sentence_id;

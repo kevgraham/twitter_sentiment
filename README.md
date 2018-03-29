@@ -19,9 +19,13 @@ A tone is one of the following:
 ```
 
 ```
-/tweet?user={twitter_handle}
+/tweet?user={twitter_handle}&count={count}
 ```
 
 ```
-/analyze?user={twitter_handle}
+/analyze?user={twitter_handle}&count={count}
+```
+
+```
+/find?tone={tone_id}
 ```

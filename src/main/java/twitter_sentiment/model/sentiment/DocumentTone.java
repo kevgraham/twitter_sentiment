@@ -1,7 +1,7 @@
 package twitter_sentiment.model.sentiment;
 
 public class DocumentTone {
-    ToneScore[] tones;
+    private ToneScore[] tones;
 
     public ToneScore[] getTones() {
         return tones;

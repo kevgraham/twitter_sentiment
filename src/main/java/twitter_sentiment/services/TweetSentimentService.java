@@ -1,6 +1,5 @@
 package twitter_sentiment.services;
 
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -14,9 +13,8 @@ import twitter_sentiment.model.internal.TweetSentiment;
 import twitter_sentiment.model.sentiment.ToneResponse;
 import twitter_sentiment.model.sentiment.ToneScore;
 import twitter_sentiment.model.twitter.Tweet;
-import twitter_sentiment.utilities.OAuthUtil;
+import twitter_sentiment.utilities.AuthUtil;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 @Service
@@ -44,7 +42,7 @@ public class TweetSentimentService {
     private String consumerSecret;
 
     @Value("${twitter.accessSecret}")
-    String accessSecret;
+    private String accessSecret;
 
     /**
      * Gets the tones of the given query from Watson Tone Analyzer API
@@ -56,9 +54,11 @@ public class TweetSentimentService {
         // build url
         String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+query;
 
+        // create new header with authorization String
+        HttpHeaders headers = AuthUtil.createWatsonHeader(username, password);
+
         // make API call
-        ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange
-                (fquery, HttpMethod.GET, new HttpEntity<String>(createBasicAuth()), ToneResponse.class);
+        ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange(fquery, HttpMethod.GET, new HttpEntity(headers), ToneResponse.class);
 
         // return response
         ToneResponse response = fullResponse.getBody();
@@ -66,38 +66,25 @@ public class TweetSentimentService {
     }
 
     /**
-     * Creates a Header with Basic Authorization for the Watson Tone API
-     * @return
-     */
-    HttpHeaders createBasicAuth() {
-
-        // create new header with authorization String
-        return new HttpHeaders() {{
-            String auth = username + ":" + password;
-            byte[] encodedAuth = Base64.encodeBase64(
-                    auth.getBytes(Charset.forName("US-ASCII")) );
-            String authHeader = "Basic " + new String( encodedAuth );
-            set( "Authorization", authHeader );
-        }};
-    }
-
-    /**
      * Gets an array of recent tweets for the given username
      * @param username twitter handle
      * @return array of tweets
      */
-    public Tweet[] recentTweets(String username) {
+    public Tweet[] recentTweets(String username, Integer count) {
+
+        if (count == null) {
+            count = 10;
+        }
 
         // build URL
         String baseURL = "https://api.twitter.com/1.1/statuses/user_timeline.json";
-        String fullQuery = baseURL + "?screen_name=" + username + "&count=5";
+        String fullQuery = baseURL + "?screen_name=" + username + "&count=" + count;
 
         // create new header with authorization String
-        HttpEntity<String> entity = new HttpEntity<>(OAuthUtil.getHeader(baseURL, username, consumerKey, accessToken, consumerSecret, accessSecret));
+        HttpHeaders headers = AuthUtil.createTwitterHeader(baseURL, username, count, consumerKey, accessToken, consumerSecret, accessSecret);
 
         // make API call
-        ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange
-                (fullQuery, HttpMethod.GET, entity, Tweet[].class);
+        ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
 
         // return response
         Tweet[] response = fullResponse.getBody();
@@ -109,10 +96,10 @@ public class TweetSentimentService {
      * @param user twitter handle
      * @return an ArrayList of sentiment data on tweets
      */
-    public ArrayList<TweetSentiment> analyzeTweets(String user) {
+    public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) {
 
         // pull recent tweets
-        Tweet[] tweets = recentTweets(user);
+        Tweet[] tweets = recentTweets(user, count);
 
         // build ArrayList of TweetSentiment
         ArrayList<TweetSentiment> output = new ArrayList<>();
@@ -176,5 +163,14 @@ public class TweetSentimentService {
         }
 
         return output;
+    }
+
+    /**
+     * Pulls tweet sentiment data of a given tone
+     * @param tone to query
+     * @return an ArrayList of tweet sentiment data
+     */
+    public ArrayList<TweetSentiment> findTweets(String tone) {
+        return tweetSentimentMapper.findTweets(tone);
     }
 }

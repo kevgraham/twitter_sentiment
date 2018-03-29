@@ -1,16 +1,18 @@
 package twitter_sentiment.utilities;
 
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.http.HttpHeaders;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class OAuthUtil {
+public class AuthUtil {
 
     private static ArrayList<Parameter> parameters = new ArrayList<>();
 
@@ -30,28 +32,58 @@ public class OAuthUtil {
     private static String oAuthSignature;
     private static String authorization;
 
-    public static HttpHeaders getHeader(String baseURL, String user, String oAuthConsumerKey, String oAuthToken,
+    /**
+     * Creates a Header with Basic Authorization for the Watson Tone API
+     * @return
+     */
+    public static HttpHeaders createWatsonHeader(String username, String password) {
+
+        HttpHeaders headers = new HttpHeaders();
+
+        String auth = username + ":" + password;
+
+        byte[] encodedAuth = Base64.encodeBase64(
+                auth.getBytes(Charset.forName("US-ASCII")) );
+
+        String authHeader = "Basic " + new String( encodedAuth );
+
+        headers.set( "Authorization", authHeader );
+
+        return headers;
+    }
+
+    /**
+     * Creates a Header with oAuth1 Authorization for the Twitter API
+     * @param baseURL
+     * @param user
+     * @param oAuthConsumerKey
+     * @param oAuthToken
+     * @param oAuthConsumerSecret
+     * @param oAuthTokenSecret
+     * @return
+     */
+    public static HttpHeaders createTwitterHeader(String baseURL, String user, int count, String oAuthConsumerKey, String oAuthToken,
                                         String oAuthConsumerSecret, String oAuthTokenSecret) {
 
-        OAuthUtil.method = "GET";
-        OAuthUtil.baseURL = baseURL;
+        AuthUtil.method = "GET";
+        AuthUtil.baseURL = baseURL;
 
-        OAuthUtil.oAuthConsumerKey = oAuthConsumerKey;
-        OAuthUtil.oAuthNonce = String.valueOf(new SecureRandom().nextLong());
-        OAuthUtil.oAuthSignatureMethod = "HMAC-SHA1";
-        OAuthUtil.oAuthTimeStamp = String.valueOf(System.currentTimeMillis() / 1000);
-        OAuthUtil.oAuthToken = oAuthToken;
-        OAuthUtil.oAuthVersion = "1.0";
+        AuthUtil.oAuthConsumerKey = oAuthConsumerKey;
+        AuthUtil.oAuthNonce = String.valueOf(new SecureRandom().nextLong());
+        AuthUtil.oAuthSignatureMethod = "HMAC-SHA1";
+        AuthUtil.oAuthTimeStamp = String.valueOf(System.currentTimeMillis() / 1000);
+        AuthUtil.oAuthToken = oAuthToken;
+        AuthUtil.oAuthVersion = "1.0";
 
-        OAuthUtil.oAuthConsumerSecret = oAuthConsumerSecret;
-        OAuthUtil.oAuthTokenSecret = oAuthTokenSecret;
+        AuthUtil.oAuthConsumerSecret = oAuthConsumerSecret;
+        AuthUtil.oAuthTokenSecret = oAuthTokenSecret;
 
         // build parameter String
-        buildParams(user);
+        buildParams(user, count);
 
-        OAuthUtil.oAuthSignature = getSignature();
+        AuthUtil.oAuthSignature = getSignature();
 
-        OAuthUtil.authorization = getAuthorization();
+        AuthUtil.authorization = getAuthorization();
 
         // create header
         HttpHeaders header = new HttpHeaders();
@@ -60,11 +92,11 @@ public class OAuthUtil {
         return header;
     }
 
-    private static void buildParams(String user) {
+    private static void buildParams(String user, int count) {
         // add encoded parameters
         parameters = new ArrayList<>();
         parameters.add(new Parameter("screen_name", encode(user)));
-        parameters.add(new Parameter("count", "5"));
+        parameters.add(new Parameter("count", count));
         parameters.add(new Parameter("oauth_consumer_key", encode(oAuthConsumerKey)));
         parameters.add(new Parameter("oauth_nonce", encode(oAuthNonce)));
         parameters.add(new Parameter("oauth_signature_method", encode(oAuthSignatureMethod)));
@@ -130,7 +162,7 @@ public class OAuthUtil {
             Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(keySpec);
             byte[] rawValue = mac.doFinal(baseString.getBytes());
-            return Base64.encode(rawValue);
+            return Base64.encodeBase64String(rawValue);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -193,65 +225,4 @@ public class OAuthUtil {
 
     }
 
-    private static class Base64 {
-
-        private final static char[] chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
-
-        private static int[] charToInt = new int[128];
-
-        static {
-            for (int i = 0; i < chars.length; i++) {
-                charToInt[chars[i]] = i;
-            }
-        }
-
-        public static String encode(byte[] bytes) {
-            int size = bytes.length;
-            char[] ar = new char[((size + 2) / 3) * 4];
-            int a = 0;
-            int i = 0;
-            while (i < size) {
-                byte b0 = bytes[i++];
-                byte b1 = (i < size) ? bytes[i++] : 0;
-                byte b2 = (i < size) ? bytes[i++] : 0;
-
-                int mask = 0x3F;
-                ar[a++] = chars[(b0 >> 2) & mask];
-                ar[a++] = chars[((b0 << 4) | ((b1 & 0xFF) >> 4)) & mask];
-                ar[a++] = chars[((b1 << 2) | ((b2 & 0xFF) >> 6)) & mask];
-                ar[a++] = chars[b2 & mask];
-            }
-            switch (size % 3) {
-                case 1:
-                    ar[--a] = '=';
-                case 2:
-                    ar[--a] = '=';
-            }
-            return new String(ar);
-        }
-
-        public static byte[] decode(String str) {
-            int delta = str.endsWith("==") ? 2 : str.endsWith("=") ? 1 : 0;
-            byte[] bytes = new byte[str.length() * 3 / 4 - delta];
-            int mask = 0xFF;
-            int index = 0;
-            for (int i = 0; i < str.length(); i += 4) {
-                int c0 = charToInt[str.charAt(i)];
-                int c1 = charToInt[str.charAt(i + 1)];
-                bytes[index++] = (byte) (((c0 << 2) | (c1 >> 4)) & mask);
-                if (index >= bytes.length) {
-                    return bytes;
-                }
-                int c2 = charToInt[str.charAt(i + 2)];
-                bytes[index++] = (byte) (((c1 << 4) | (c2 >> 2)) & mask);
-                if (index >= bytes.length) {
-                    return bytes;
-                }
-                int c3 = charToInt[str.charAt(i + 3)];
-                bytes[index++] = (byte) (((c2 << 6) | c3) & mask);
-            }
-            return bytes;
-        }
-
-    }
 }

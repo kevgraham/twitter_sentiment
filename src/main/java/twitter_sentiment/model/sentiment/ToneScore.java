@@ -1,9 +1,9 @@
 package twitter_sentiment.model.sentiment;
 
 public class ToneScore {
-    double score;
-    String tone_id;
-    String tone_name;
+    private double score;
+    private String tone_id;
+    private String tone_name;
 
     public double getScore() {
         return score;

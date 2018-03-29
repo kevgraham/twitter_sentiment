@@ -2,14 +2,14 @@ package twitter_sentiment.model.internal;
 
 public class TweetSentiment {
 
-    private String tweet;
-    private double anger;
-    private double fear;
-    private double joy;
-    private double sadness;
-    private double analytical;
-    private double confident;
-    private double tentative;
+    private String tweet = "";
+    private double anger = 0;
+    private double fear = 0;
+    private double joy = 0;
+    private double sadness = 0;
+    private double analytical = 0;
+    private double confident = 0;
+    private double tentative = 0;
 
     public String getTweet() {
         return tweet;

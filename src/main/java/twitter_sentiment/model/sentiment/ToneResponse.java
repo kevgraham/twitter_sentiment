@@ -1,8 +1,8 @@
 package twitter_sentiment.model.sentiment;
 
 public class ToneResponse {
-    DocumentTone document_tone;
-    SentenceTone[] sentences_tone;
+    private DocumentTone document_tone;
+    private SentenceTone[] sentences_tone;
 
     public DocumentTone getDocument_tone() {
         return document_tone;
