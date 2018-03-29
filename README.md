@@ -4,18 +4,24 @@ This API integrates the Twitter API with the IBM Watson Tone Analyzer API to det
 a given tweet.
 
 A tone is one of the following:
-*Anger
-*Fear
-*Joy
-*Sadness
-*Analytical
-*Confident
-*Tentative
+* Anger
+* Fear
+* Joy
+* Sadness
+* Analytical
+* Confident
+* Tentative
 
-** Endpoints
+## Endpoints
 
+```
 /sentiment?q={text}
+```
 
+```
 /tweet?user={twitter_handle}
+```
 
+```
 /analyze?user={twitter_handle}
+```
