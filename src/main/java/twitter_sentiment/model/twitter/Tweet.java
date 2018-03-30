@@ -3,7 +3,7 @@ package twitter_sentiment.model.twitter;
 public class Tweet {
 
     String created_at;
-    String text;
+    String full_text;
     User user;
 
     public String getCreated_at() {
@@ -14,12 +14,12 @@ public class Tweet {
         this.created_at = created_at;
     }
 
-    public String getText() {
-        return text;
+    public String getFull_text() {
+        return full_text;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setFull_text(String full_text) {
+        this.full_text = full_text;
     }
 
     public User getUser() {

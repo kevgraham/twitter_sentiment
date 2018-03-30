@@ -53,7 +53,9 @@ public class TweetSentimentService {
     public ToneResponse sentimentAnalysis(String query) {
 
         // get rid of links
-        String cleanQuery = query.replaceAll("http\\S+", "");
+       // String cleanQuery = query.replaceAll("http\\S+", "");
+
+        String cleanQuery = query.replaceAll("#[A-Za-z]+", " ");
 
         // build url
         String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+cleanQuery;
@@ -82,7 +84,7 @@ public class TweetSentimentService {
 
         // build URL
         String baseURL = "https://api.twitter.com/1.1/statuses/user_timeline.json";
-        String fullQuery = baseURL + "?screen_name=" + username + "&count=" + count;
+        String fullQuery = baseURL + "?tweet_mode=extended" + "&screen_name=" + username + "&count=" + count;
 
         // create new header with authorization String
         HttpHeaders headers = AuthUtil.createTwitterHeader(baseURL, username, count, consumerKey, accessToken, consumerSecret, accessSecret);
@@ -112,13 +114,13 @@ public class TweetSentimentService {
         for (int i = 0; i < tweets.length; i++) {
 
             // check if already in database
-            TweetSentiment temp = findSpecificTweet(tweets[i].getText());
+            TweetSentiment temp = findSpecificTweet(tweets[i].getFull_text());
             if (temp == null) {
 
 
                 // get ToneScores for specific tweet
                 System.out.print("getting from api");
-                ToneScore[] tones = sentimentAnalysis(tweets[i].getText()).getDocument_tone().getTones();
+                ToneScore[] tones = sentimentAnalysis(tweets[i].getFull_text()).getDocument_tone().getTones();
 
                 // map TweetSentiment Object
                 temp = mapTweetSentiment(tweets[i], tones);
@@ -134,7 +136,7 @@ public class TweetSentimentService {
 
                 // add lookup UserTweet Database Table
                 int user_id = findIdByUserName(tweets[i].getUser().getScreen_name());
-                int tweet_id = findIdByTweet(tweets[i].getText());
+                int tweet_id = findIdByTweet(tweets[i].getFull_text());
                 insertUserTweet(user_id, tweet_id);
 
 
@@ -159,7 +161,7 @@ public class TweetSentimentService {
     public TweetSentiment mapTweetSentiment(Tweet tweet, ToneScore[] tones) {
         TweetSentiment output = new TweetSentiment();
 
-        output.setTweet(tweet.getText());
+        output.setTweet(tweet.getFull_text());
 
         for (ToneScore tone : tones) {
             String tone_id = tone.getTone_id();

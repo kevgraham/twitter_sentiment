@@ -2,6 +2,7 @@ package twitter_sentiment.utilities;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -47,8 +48,9 @@ public class AuthUtil {
 
         String authHeader = "Basic " + new String( encodedAuth );
 
+        // create headers
         headers.set( "Authorization", authHeader );
-
+        headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
@@ -86,14 +88,16 @@ public class AuthUtil {
         AuthUtil.authorization = getAuthorization();
 
         // create header
-        HttpHeaders header = new HttpHeaders();
-        header.set("Authorization", authorization);
-        return header;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", authorization);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
     }
 
     private static void buildParams(String user, int count) {
         // add encoded parameters
         parameters = new ArrayList<>();
+        parameters.add(new Parameter("tweet_mode", encode("extended")));
         parameters.add(new Parameter("screen_name", encode(user)));
         parameters.add(new Parameter("count", count));
         parameters.add(new Parameter("oauth_consumer_key", encode(oAuthConsumerKey)));
