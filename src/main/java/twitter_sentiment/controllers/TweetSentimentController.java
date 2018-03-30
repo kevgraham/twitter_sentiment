@@ -1,13 +1,11 @@
 package twitter_sentiment.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import twitter_sentiment.model.internal.TweetSentiment;
 import twitter_sentiment.services.TweetSentimentService;
 
+import javax.websocket.server.PathParam;
 import java.util.ArrayList;
 
 @RestController
@@ -33,8 +31,18 @@ public class TweetSentimentController {
      * @param tone to query
      * @return an ArrayList of sentiment data on tweets
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/retrieve")
-    public ArrayList<TweetSentiment> findTweetsByTone(@RequestParam(value="tone") String tone) {
+    @RequestMapping(method = RequestMethod.GET, value = "/retrieve/tone/{tone}")
+    public ArrayList<TweetSentiment> findTweetsByTone(@PathVariable String tone) {
         return tweetSentimentService.findTweetsByTone(tone);
+    }
+
+    /**
+     * Pull tweets for the given user from the database
+     * @param user to query
+     * @return an ArrayList of sentiment data on tweets
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/retrieve/user/{user}")
+    public ArrayList<TweetSentiment> findTweetsByUser(@PathVariable String user) {
+        return tweetSentimentService.findTweetsByUser(user);
     }
 }
