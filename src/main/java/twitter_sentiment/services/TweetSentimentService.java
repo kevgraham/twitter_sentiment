@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
 import twitter_sentiment.mappers.TweetSentimentMapper;
 import twitter_sentiment.model.internal.TweetSentiment;
@@ -15,7 +16,10 @@ import twitter_sentiment.model.sentiment.ToneScore;
 import twitter_sentiment.model.twitter.Tweet;
 import twitter_sentiment.model.twitter.User;
 import twitter_sentiment.utilities.AuthUtil;
+import twitter_sentiment.utilities.TwitterHandleCSV;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 @Service
@@ -27,23 +31,8 @@ public class TweetSentimentService {
     @Autowired
     TweetSentimentMapper tweetSentimentMapper;
 
-    @Value("${watson.username}")
-    private String username;
-
-    @Value("${watson.password}")
-    private String password;
-
-    @Value("${twitter.consumerKey}")
-    private String consumerKey;
-
-    @Value("${twitter.accessToken}")
-    private String accessToken;
-
-    @Value("${twitter.consumerSecret}")
-    private String consumerSecret;
-
-    @Value("${twitter.accessSecret}")
-    private String accessSecret;
+    @Autowired
+    AuthUtil authUtil;
 
     /**
      * Gets the tones of the given query from Watson Tone Analyzer API
@@ -52,16 +41,18 @@ public class TweetSentimentService {
      */
     public ToneResponse sentimentAnalysis(String query) {
 
-        // get rid of links
-       // String cleanQuery = query.replaceAll("http\\S+", "");
-
-        String cleanQuery = query.replaceAll("#[A-Za-z]+", " ");
+        // clean hashtag issues
+        try {
+            query = URLEncoder.encode(query, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
         // build url
-        String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+cleanQuery;
+        String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+ query;
 
         // create new header with authorization String
-        HttpHeaders headers = AuthUtil.createWatsonHeader(username, password);
+        HttpHeaders headers = authUtil.createWatsonHeader();
 
         // make API call
         ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange(fquery, HttpMethod.GET, new HttpEntity(headers), ToneResponse.class);
@@ -87,7 +78,7 @@ public class TweetSentimentService {
         String fullQuery = baseURL + "?tweet_mode=extended" + "&screen_name=" + username + "&count=" + count;
 
         // create new header with authorization String
-        HttpHeaders headers = AuthUtil.createTwitterHeader(baseURL, username, count, consumerKey, accessToken, consumerSecret, accessSecret);
+        HttpHeaders headers = authUtil.createTwitterHeader(baseURL, username, count);
 
         // make API call
         ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
@@ -116,7 +107,6 @@ public class TweetSentimentService {
             // check if already in database
             TweetSentiment temp = findSpecificTweet(tweets[i].getFull_text());
             if (temp == null) {
-
 
                 // get ToneScores for specific tweet
                 System.out.print("getting from api");
@@ -198,6 +188,28 @@ public class TweetSentimentService {
     }
 
     /**
+     * Analyzes the sentiment of Congress
+     * @return an ArrayList of tweet sentiment data
+     */
+    public ArrayList<TweetSentiment> analyzeCongress() {
+
+        // load twitter handles from csv
+        ArrayList<String> twitterHandles = TwitterHandleCSV.loadTwitterHandles();
+
+        // analyze twitter for each twitter handle
+        ArrayList<TweetSentiment> result = new ArrayList<>();
+
+        for (String twitterHandle : twitterHandles) {
+            ArrayList<TweetSentiment> tweetData = analyzeTweets(twitterHandle, 5);
+            for (TweetSentiment data : tweetData) {
+                result.add(data);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Pulls tweet sentiment data of a given tone
      * @param tone to query
      * @return an ArrayList of tweet sentiment data
@@ -228,6 +240,7 @@ public class TweetSentimentService {
         } else {
             return null;
         }
+
     }
 
     /**

@@ -16,6 +16,7 @@
     </parent>
 
     <dependencies>
+        <!-- Uncomment dependency below to deploy to remote tomcat server -->
         <!--<dependency>-->
             <!--<groupId>org.springframework.boot</groupId>-->
             <!--<artifactId>spring-boot-starter-tomcat</artifactId>-->

@@ -1,6 +1,8 @@
 package twitter_sentiment.utilities;
 
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -15,29 +17,42 @@ import java.util.Comparator;
 
 public class AuthUtil {
 
-    private static ArrayList<Parameter> parameters = new ArrayList<>();
+    private ArrayList<Parameter> parameters = new ArrayList<>();
 
-    private static String method;
-    private static String baseURL;
+    private String method;
+    private String baseURL;
 
-    private static String oAuthConsumerKey;
-    private static String oAuthNonce;
-    private static String oAuthSignatureMethod;
-    private static String oAuthTimeStamp;
-    private static String oAuthToken;
-    private static String oAuthVersion;
+    private String oAuthNonce;
+    private String oAuthSignatureMethod;
+    private String oAuthTimeStamp;
+    private String oAuthVersion;
 
-    private static String oAuthConsumerSecret;
-    private static String oAuthTokenSecret;
+    private String oAuthSignature;
+    private String authorization;
 
-    private static String oAuthSignature;
-    private static String authorization;
+    @Value("${watson.username}")
+    private String username;
+
+    @Value("${watson.password}")
+    private String password;
+
+    @Value("${twitter.consumerKey}")
+    private String oAuthConsumerKey;
+
+    @Value("${twitter.accessToken}")
+    private String oAuthToken;
+
+    @Value("${twitter.consumerSecret}")
+    private String oAuthConsumerSecret;
+
+    @Value("${twitter.accessSecret}")
+    private String oAuthTokenSecret;
 
     /**
      * Creates a Header with Basic Authorization for the Watson Tone API
      * @return
      */
-    public static HttpHeaders createWatsonHeader(String username, String password) {
+    public HttpHeaders createWatsonHeader() {
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -58,34 +73,24 @@ public class AuthUtil {
      * Creates a Header with oAuth1 Authorization for the Twitter API
      * @param baseURL
      * @param user
-     * @param oAuthConsumerKey
-     * @param oAuthToken
-     * @param oAuthConsumerSecret
-     * @param oAuthTokenSecret
      * @return
      */
-    public static HttpHeaders createTwitterHeader(String baseURL, String user, int count, String oAuthConsumerKey, String oAuthToken,
-                                        String oAuthConsumerSecret, String oAuthTokenSecret) {
+    public HttpHeaders createTwitterHeader(String baseURL, String user, int count) {
 
-        AuthUtil.method = "GET";
-        AuthUtil.baseURL = baseURL;
+        this.method = "GET";
+        this.baseURL = baseURL;
 
-        AuthUtil.oAuthConsumerKey = oAuthConsumerKey;
-        AuthUtil.oAuthNonce = String.valueOf(new SecureRandom().nextLong());
-        AuthUtil.oAuthSignatureMethod = "HMAC-SHA1";
-        AuthUtil.oAuthTimeStamp = String.valueOf(System.currentTimeMillis() / 1000);
-        AuthUtil.oAuthToken = oAuthToken;
-        AuthUtil.oAuthVersion = "1.0";
-
-        AuthUtil.oAuthConsumerSecret = oAuthConsumerSecret;
-        AuthUtil.oAuthTokenSecret = oAuthTokenSecret;
+        this.oAuthNonce = String.valueOf(new SecureRandom().nextLong());
+        this.oAuthSignatureMethod = "HMAC-SHA1";
+        this.oAuthTimeStamp = String.valueOf(System.currentTimeMillis() / 1000);
+        this.oAuthVersion = "1.0";
 
         // build parameter String
         buildParams(user, count);
 
-        AuthUtil.oAuthSignature = getSignature();
+        this.oAuthSignature = getSignature();
 
-        AuthUtil.authorization = getAuthorization();
+        this.authorization = getAuthorization();
 
         // create header
         HttpHeaders headers = new HttpHeaders();
@@ -94,7 +99,7 @@ public class AuthUtil {
         return headers;
     }
 
-    private static void buildParams(String user, int count) {
+    private void buildParams(String user, int count) {
         // add encoded parameters
         parameters = new ArrayList<>();
         parameters.add(new Parameter("tweet_mode", encode("extended")));
@@ -115,7 +120,7 @@ public class AuthUtil {
         });
     }
 
-    private static String encode(String str) {
+    private String encode(String str) {
         String encoded = str;
 
         try {
@@ -130,7 +135,7 @@ public class AuthUtil {
         return encoded;
     }
 
-    private static String getSignatureBase() {
+    private String getSignatureBase() {
 
         StringBuilder paramsString = new StringBuilder();
 
@@ -153,7 +158,7 @@ public class AuthUtil {
         return baseString.toString();
     }
 
-    private static String getSignature() {
+    private String getSignature() {
         String baseString = getSignatureBase();
 
         String algorithm = "HmacSHA1";
@@ -173,7 +178,7 @@ public class AuthUtil {
         return "";
     }
 
-    private static String getAuthorization() {
+    private String getAuthorization() {
         StringBuilder buf = new StringBuilder();
         buf.append("OAuth ");
 
@@ -208,7 +213,7 @@ public class AuthUtil {
         return buf.toString();
     }
 
-    private static class Parameter {
+    private class Parameter {
 
         private final String key;
         private final Object value;

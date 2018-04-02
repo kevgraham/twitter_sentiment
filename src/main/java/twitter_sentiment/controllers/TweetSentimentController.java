@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.*;
 import twitter_sentiment.model.internal.TweetSentiment;
 import twitter_sentiment.services.TweetSentimentService;
 
-import javax.websocket.server.PathParam;
 import java.util.ArrayList;
 
 @RestController
+@CrossOrigin
 public class TweetSentimentController {
 
     @Autowired
@@ -19,7 +19,8 @@ public class TweetSentimentController {
      * @param user twitter handle
      * @return an ArrayList of sentiment data on tweets
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/analyze")
+
+    @RequestMapping(method = RequestMethod.GET, value = "/tweets")
     public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="user") String user,
                                                    @RequestParam(value="count", required=false) Integer count) {
 
@@ -27,10 +28,20 @@ public class TweetSentimentController {
     }
 
     /**
+     * Analyzes the overall sentiment of Congress
+     * @return an ArrayList of sentiment data on all available Congress Member Tweets
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "/congress")
+    public ArrayList<TweetSentiment> analyzeCongress() {
+        return tweetSentimentService.analyzeCongress();
+    }
+
+    /**
      * Pull tweets with the given tone from the database
      * @param tone to query
      * @return an ArrayList of sentiment data on tweets
      */
+
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/tone/{tone}")
     public ArrayList<TweetSentiment> findTweetsByTone(@PathVariable String tone) {
         return tweetSentimentService.findTweetsByTone(tone);
@@ -41,6 +52,7 @@ public class TweetSentimentController {
      * @param user to query
      * @return an ArrayList of sentiment data on tweets
      */
+
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/user/{user}")
     public ArrayList<TweetSentiment> findTweetsByUser(@PathVariable String user) {
         return tweetSentimentService.findTweetsByUser(user);
