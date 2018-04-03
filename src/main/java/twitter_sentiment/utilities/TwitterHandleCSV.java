@@ -8,8 +8,8 @@ import java.util.ArrayList;
 public class TwitterHandleCSV {
 
     public static ArrayList<String> loadTwitterHandles() {
-        String housePath = "/Users/kevingraham/Documents/Development/java/twitter_sentiment/src/main/resources/115th-Congress-House-seeds.csv";
-        String senatePath = "/Users/kevingraham/Documents/Development/java/twitter_sentiment/src/main/resources/115th-Congress-Senate-seeds.csv";
+        String housePath = "/Users/kevingraham/Documents/Development/java/twitter_sentiment/src/main/resources/csv/115th-Congress-House-seeds.csv";
+        String senatePath = "/Users/kevingraham/Documents/Development/java/twitter_sentiment/src/main/resources/csv/115th-Congress-Senate-seeds.csv";
 
         ArrayList<String> result = new ArrayList<>();
 
