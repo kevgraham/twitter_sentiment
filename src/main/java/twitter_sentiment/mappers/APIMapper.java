@@ -3,23 +3,18 @@ package twitter_sentiment.mappers;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-import twitter_sentiment.model.internal.ApiKey;
+import twitter_sentiment.model.internal.APIKey;
 
 @Mapper
-public interface ApiMapper {
+public interface APIMapper {
 
-    final String INSERT_APIKEY = "INSERT INTO `TwitterSentiment`.`ApiKeys` " +
-            "(`key`, `owner`, `active`) " +
-            "VALUES (#{key}, #{owner}, #{active}); ";
-    @Insert(INSERT_APIKEY)
-    public int insertApiKey(ApiKey apiKey);
+    @Insert("INSERT INTO `TwitterSentiment`.`ApiKeys` (`key`, `owner`, `active`) VALUES (#{key}, #{owner}, #{active}); ")
+    public int insertApiKey(APIKey apiKey);
 
+    @Select("SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `owner` = #{owner} ")
+    public APIKey findKeyByOwner(String owner);
 
-    final String FIND_KEY_BY_OWNER = "SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `owner` = #{owner} ";
-    @Select(FIND_KEY_BY_OWNER)
-    public ApiKey findKeyByOwner(String owner);
+    @Select("SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `key` = #{key} AND `active` = 1")
+    public APIKey findActiveKey(String key);
 
-    final String FIND_KEY = "SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `key` = #{key}";
-    @Select(FIND_KEY)
-    public ApiKey findKey(String key);
 }

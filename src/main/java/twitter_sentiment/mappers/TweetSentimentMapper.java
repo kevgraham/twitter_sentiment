@@ -25,12 +25,12 @@ public interface TweetSentimentMapper {
 
     final String FIND_TWEETS_BY_TONE = "SELECT * FROM `TwitterSentiment`.`Tweets` WHERE ${tone} > .75; ";
     @Select(FIND_TWEETS_BY_TONE)
-    public ArrayList<TweetSentiment> findTweets(@Param("tone") String tone);
+    public ArrayList<TweetSentiment> findTweetsByTone(@Param("tone") String tone);
 
 
-    final String FIND_SPECIFIC_TWEET = "SELECT * FROM `TwitterSentiment`.`Tweets` WHERE tweet = #{text}; ";
+    final String FIND_SPECIFIC_TWEET = "SELECT * FROM `TwitterSentiment`.`Tweets` WHERE tweet = #{text} LIMIT 1; ";
     @Select(FIND_SPECIFIC_TWEET)
-    public ArrayList<TweetSentiment> findSpecificTweet(String text);
+    public TweetSentiment findSpecificTweet(String text);
 
 
     final String FIND_ID_BY_TWEET = "SELECT `id` FROM `TwitterSentiment`.`Tweets` WHERE tweet = #{text}; ";
@@ -49,9 +49,9 @@ public interface TweetSentimentMapper {
     public int insertUser(User user);
 
 
-    final String FIND_USER_BY_SCREENNAME = "SELECT * FROM TwitterSentiment.Users WHERE `screen_name` = #{screen_name}";
+    final String FIND_USER_BY_SCREENNAME = "SELECT * FROM TwitterSentiment.Users WHERE `screen_name` = #{screen_name} LIMIT 1";
     @Select(FIND_USER_BY_SCREENNAME)
-    public ArrayList<User> findUserByScreenName(String screen_name);
+    public User findUserByScreenName(String screen_name);
 
 
     final String FIND_ID_BY_SCREENNAME = "SELECT `id` FROM TwitterSentiment.Users WHERE `screen_name` = #{screen_name}";
