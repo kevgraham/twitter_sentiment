@@ -1,5 +1,6 @@
 package twitter_sentiment.services;
 
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import twitter_sentiment.mappers.ApiMapper;
@@ -25,7 +26,7 @@ public class ApiService {
         }
 
         // generate key and make sure its unique
-        String key = generateKey();
+        String key = generateKey(owner);
 
         // create apikey Object
         ApiKey temp = new ApiKey();
@@ -41,12 +42,21 @@ public class ApiService {
     }
 
     /**
-     * Creates an ApiKey
+     * Creates an apikey
      * @return String key
      */
-    public String generateKey() {
-        // TODO apikey algorithm
-        String key = "123abc";
+    public String generateKey(String owner) {
+
+        // get bytes of current time
+        byte[] timestamp = String.valueOf(System.currentTimeMillis()).getBytes();
+
+        // get bytes of owner
+        byte[] user = String.valueOf(System.currentTimeMillis()).getBytes();
+
+        // encode both into key
+        String key = Base64.encodeBase64String(timestamp) +
+                     Base64.encodeBase64String(user);
+
         return key;
     }
 
