@@ -1,4 +1,4 @@
-package twitter_sentiment.model.sentiment;
+package twitter_sentiment.model.watson;
 
 public class ToneScore {
     private double score;
