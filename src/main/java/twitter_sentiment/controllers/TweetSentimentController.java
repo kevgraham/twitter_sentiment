@@ -2,7 +2,10 @@ package twitter_sentiment.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import twitter_sentiment.exceptions.ApiKeyException;
+import twitter_sentiment.model.internal.ApiKey;
 import twitter_sentiment.model.internal.TweetSentiment;
+import twitter_sentiment.services.ApiService;
 import twitter_sentiment.services.TweetSentimentService;
 
 import java.util.ArrayList;
@@ -14,26 +17,49 @@ public class TweetSentimentController {
     @Autowired
     TweetSentimentService tweetSentimentService;
 
+    @Autowired
+    ApiService apiService;
+
     /**
      * Analyzes the most recent tweets of a given user
      * @param user twitter handle
      * @return an ArrayList of sentiment data on tweets
      */
 
-    @RequestMapping(method = RequestMethod.GET, value = "/tweets")
-    public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="user") String user,
+    @GetMapping("/tweets")
+    public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="apikey") String key,
+                                                   @RequestParam(value="user") String user,
                                                    @RequestParam(value="count", required=false) Integer count) {
 
-        return tweetSentimentService.analyzeTweets(user, count);
+        try {
+            if (apiService.validateKey(key)) {
+                return tweetSentimentService.analyzeTweets(user, count);
+            } else {
+                throw new ApiKeyException("invalid key");
+            }
+        } catch (ApiKeyException ex) {
+            System.out.println(ex);
+            return null;
+        }
+
     }
 
     /**
      * Analyzes the overall sentiment of Congress
      * @return an ArrayList of sentiment data on all available Congress Member Tweets
      */
-    @RequestMapping(method = RequestMethod.GET, value = "/congress")
-    public ArrayList<TweetSentiment> analyzeCongress() {
-        return tweetSentimentService.analyzeCongress();
+    @GetMapping("/congress")
+    public ArrayList<TweetSentiment> analyzeCongress(@RequestParam(value="apikey") String key) {
+        try {
+            if (apiService.validateKey(key)) {
+                return tweetSentimentService.analyzeCongress();
+            } else {
+                throw new ApiKeyException("invalid key");
+            }
+        } catch (ApiKeyException ex) {
+            System.out.println(ex);
+            return null;
+        }
     }
 
     /**
@@ -43,8 +69,18 @@ public class TweetSentimentController {
      */
 
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/tone/{tone}")
-    public ArrayList<TweetSentiment> findTweetsByTone(@PathVariable String tone) {
-        return tweetSentimentService.findTweetsByTone(tone);
+    public ArrayList<TweetSentiment> findTweetsByTone(@PathVariable String tone,
+                                                      @RequestParam(value="apikey") String key) {
+        try {
+            if (apiService.validateKey(key)) {
+                return tweetSentimentService.findTweetsByTone(tone);
+            } else {
+                throw new ApiKeyException("invalid key");
+            }
+        } catch (ApiKeyException ex) {
+            System.out.println(ex);
+            return null;
+        }
     }
 
     /**
@@ -54,7 +90,18 @@ public class TweetSentimentController {
      */
 
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/user/{user}")
-    public ArrayList<TweetSentiment> findTweetsByUser(@PathVariable String user) {
-        return tweetSentimentService.findTweetsByUser(user);
+    public ArrayList<TweetSentiment> findTweetsByUser(@PathVariable String user,
+                                                      @RequestParam(value="apikey") String key) {
+        try {
+            if (apiService.validateKey(key)) {
+                return tweetSentimentService.findTweetsByUser(user);
+            } else {
+                throw new ApiKeyException("invalid key");
+            }
+        } catch (ApiKeyException ex) {
+            System.out.println(ex);
+            return null;
+        }
     }
+
 }

@@ -1,92 +1,33 @@
 package twitter_sentiment.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestTemplate;
 import twitter_sentiment.mappers.TweetSentimentMapper;
 import twitter_sentiment.model.internal.TweetSentiment;
-import twitter_sentiment.model.sentiment.ToneResponse;
 import twitter_sentiment.model.sentiment.ToneScore;
 import twitter_sentiment.model.twitter.Tweet;
 import twitter_sentiment.model.twitter.User;
 import twitter_sentiment.utilities.AuthUtil;
 import twitter_sentiment.utilities.TwitterHandleCSV;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 
 @Service
 public class TweetSentimentService {
 
     @Autowired
-    RestTemplate restTemplate;
-
-    @Autowired
     TweetSentimentMapper tweetSentimentMapper;
 
     @Autowired
-    AuthUtil authUtil;
+    WatsonService sentimentService;
 
-    /**
-     * Gets the tones of the given query from Watson Tone Analyzer API
-     * @param query text to be analyzed
-     * @return tone of given text
-     */
-    public ToneResponse sentimentAnalysis(String query) {
-
-        // clean hashtag issues
-        try {
-            query = URLEncoder.encode(query, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        // build url
-        String fquery = "https://gateway.watsonplatform.net/tone-analyzer/api/v3/tone?version=2017-09-21&text="+ query;
-
-        // create new header with authorization String
-        HttpHeaders headers = authUtil.createWatsonHeader();
-
-        // make API call
-        ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange(fquery, HttpMethod.GET, new HttpEntity(headers), ToneResponse.class);
-
-        // return response
-        ToneResponse response = fullResponse.getBody();
-        return response;
-    }
-
-    /**
-     * Gets an array of recent tweets for the given username
-     * @param username twitter handle
-     * @return array of tweets
-     */
-    public Tweet[] recentTweets(String username, Integer count) {
-
-        if (count == null) {
-            count = 10;
-        }
-
-        // build URL
-        String baseURL = "https://api.twitter.com/1.1/statuses/user_timeline.json";
-        String fullQuery = baseURL + "?tweet_mode=extended" + "&screen_name=" + username + "&count=" + count;
-
-        // create new header with authorization String
-        HttpHeaders headers = authUtil.createTwitterHeader(baseURL, username, count);
-
-        // make API call
-        ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
-
-        // return response
-        Tweet[] response = fullResponse.getBody();
-        return response;
-    }
+    @Autowired
+    TwitterService twitterService;
 
     /**
      * Analyzes the most recent tweets of a given user
@@ -99,7 +40,7 @@ public class TweetSentimentService {
         ArrayList<TweetSentiment> output = new ArrayList<>();
 
         // pull recent tweets
-        Tweet[] tweets = recentTweets(user, count);
+        Tweet[] tweets = twitterService.recentTweets(user, count);
 
         // iterate through recent tweets
         for (int i = 0; i < tweets.length; i++) {
@@ -110,7 +51,7 @@ public class TweetSentimentService {
 
                 // get ToneScores for specific tweet
                 System.out.print("getting from api");
-                ToneScore[] tones = sentimentAnalysis(tweets[i].getFull_text()).getDocument_tone().getTones();
+                ToneScore[] tones = sentimentService.analyze(tweets[i].getFull_text()).getDocument_tone().getTones();
 
                 // map TweetSentiment Object
                 temp = mapTweetSentiment(tweets[i], tones);
