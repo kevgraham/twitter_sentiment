@@ -2,10 +2,9 @@ package twitter_sentiment.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import twitter_sentiment.exceptions.ApiKeyException;
-import twitter_sentiment.model.internal.ApiKey;
+import twitter_sentiment.exceptions.APIKeyException;
 import twitter_sentiment.model.internal.TweetSentiment;
-import twitter_sentiment.services.ApiService;
+import twitter_sentiment.services.APIService;
 import twitter_sentiment.services.TweetSentimentService;
 
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ public class TweetSentimentController {
     TweetSentimentService tweetSentimentService;
 
     @Autowired
-    ApiService apiService;
+    APIService apiService;
 
     /**
      * Analyzes the most recent tweets of a given user
@@ -35,9 +34,9 @@ public class TweetSentimentController {
             if (apiService.validateKey(key)) {
                 return tweetSentimentService.analyzeTweets(user, count);
             } else {
-                throw new ApiKeyException("invalid key");
+                throw new APIKeyException("invalid key");
             }
-        } catch (ApiKeyException ex) {
+        } catch (APIKeyException ex) {
             System.out.println(ex);
             return null;
         }
@@ -54,9 +53,9 @@ public class TweetSentimentController {
             if (apiService.validateKey(key)) {
                 return tweetSentimentService.analyzeCongress();
             } else {
-                throw new ApiKeyException("invalid key");
+                throw new APIKeyException("invalid key");
             }
-        } catch (ApiKeyException ex) {
+        } catch (APIKeyException ex) {
             System.out.println(ex);
             return null;
         }
@@ -75,9 +74,9 @@ public class TweetSentimentController {
             if (apiService.validateKey(key)) {
                 return tweetSentimentService.findTweetsByTone(tone);
             } else {
-                throw new ApiKeyException("invalid key");
+                throw new APIKeyException("invalid key");
             }
-        } catch (ApiKeyException ex) {
+        } catch (APIKeyException ex) {
             System.out.println(ex);
             return null;
         }
@@ -96,9 +95,9 @@ public class TweetSentimentController {
             if (apiService.validateKey(key)) {
                 return tweetSentimentService.findTweetsByUser(user);
             } else {
-                throw new ApiKeyException("invalid key");
+                throw new APIKeyException("invalid key");
             }
-        } catch (ApiKeyException ex) {
+        } catch (APIKeyException ex) {
             System.out.println(ex);
             return null;
         }

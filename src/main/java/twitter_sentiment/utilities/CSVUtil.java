@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class TwitterHandleCSV {
+public class CSVUtil {
 
     public static ArrayList<String> loadTwitterHandles() {
         String housePath = "/Users/kevingraham/Documents/Development/java/twitter_sentiment/src/main/resources/csv/115th-Congress-House-seeds.csv";

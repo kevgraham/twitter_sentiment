@@ -1,6 +1,6 @@
 package twitter_sentiment.model.internal;
 
-public class ApiKey {
+public class APIKey {
 
     private int id;
     private String key;

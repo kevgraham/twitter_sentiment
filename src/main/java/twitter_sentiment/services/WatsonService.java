@@ -7,7 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import twitter_sentiment.model.sentiment.ToneResponse;
+import twitter_sentiment.model.watson.ToneResponse;
 import twitter_sentiment.utilities.AuthUtil;
 
 import java.io.UnsupportedEncodingException;

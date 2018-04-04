@@ -1,8 +1,8 @@
 package twitter_sentiment.exceptions;
 
-public class ApiKeyException extends Exception {
+public class APIKeyException extends Exception {
 
-    public ApiKeyException(String message) {
+    public APIKeyException(String message) {
         super(message);
     }
 

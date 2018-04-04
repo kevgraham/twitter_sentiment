@@ -26,6 +26,7 @@ public class TwitterService {
      */
     public Tweet[] recentTweets(String username, Integer count) {
 
+        // set default count
         if (count == null) {
             count = 10;
         }
