@@ -2,12 +2,14 @@ package twitter_sentiment.exceptions;
 
 public class APIKeyException extends Exception {
 
-    public APIKeyException(String message) {
-        super(message);
+    private String key;
+
+    public APIKeyException(String key) {
+        this.key = key;
     }
 
-    @Override
-    public String toString() {
-        return getMessage();
+    public String getApikey() {
+        return key;
     }
+
 }

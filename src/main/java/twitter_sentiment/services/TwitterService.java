@@ -1,12 +1,11 @@
 package twitter_sentiment.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import twitter_sentiment.exceptions.TwitterException;
 import twitter_sentiment.model.twitter.Tweet;
 import twitter_sentiment.utilities.AuthUtil;
 
@@ -24,7 +23,7 @@ public class TwitterService {
      * @param username twitter handle
      * @return array of tweets
      */
-    public Tweet[] recentTweets(String username, Integer count) {
+    public Tweet[] recentTweets(String username, Integer count) throws TwitterException {
 
         // set default count
         if (count == null) {
@@ -39,11 +38,16 @@ public class TwitterService {
         HttpHeaders headers = authUtil.createTwitterHeader(baseURL, username, count);
 
         // make API call
-        ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
+        try {
+            ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
+            Tweet[] response = fullResponse.getBody();
+            return response;
+        }
+        // catch bad API call
+        catch (HttpClientErrorException ex) {
+            throw new TwitterException(ex.getMessage(), ex.getStatusCode());
+        }
 
-        // return response
-        Tweet[] response = fullResponse.getBody();
-        return response;
     }
 
 }

@@ -1,7 +1,12 @@
 package twitter_sentiment.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Service;
+import twitter_sentiment.exceptions.DatabaseException;
+import twitter_sentiment.exceptions.TwitterException;
+import twitter_sentiment.exceptions.WatsonException;
 import twitter_sentiment.mappers.TweetSentimentMapper;
 import twitter_sentiment.model.internal.TweetSentiment;
 import twitter_sentiment.model.watson.ToneScore;
@@ -27,7 +32,7 @@ public class TweetSentimentService {
      * @param user twitter handle
      * @return an ArrayList of watson data on tweets
      */
-    public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) {
+    public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) throws TwitterException, WatsonException {
 
         // build ArrayList of TweetSentiment
         ArrayList<TweetSentiment> output = new ArrayList<>();
@@ -81,7 +86,7 @@ public class TweetSentimentService {
      * Analyzes the sentiment of Congress
      * @return an ArrayList of tweet sentiment data
      */
-    public ArrayList<TweetSentiment> analyzeCongress() {
+    public ArrayList<TweetSentiment> analyzeCongress() throws TwitterException, WatsonException {
 
         // load twitter handles from csv
         ArrayList<String> twitterHandles = CSVUtil.loadTwitterHandles();
@@ -104,8 +109,24 @@ public class TweetSentimentService {
      * @param tone to query
      * @return an ArrayList of tweet sentiment data
      */
-    public ArrayList<TweetSentiment> findTweetsByTone(String tone) {
-        return tweetSentimentMapper.findTweetsByTone(tone);
+    public ArrayList<TweetSentiment> findTweetsByTone(String tone) throws DatabaseException {
+        try {
+            // pull tweets from database
+            ArrayList<TweetSentiment> data = tweetSentimentMapper.findTweetsByTone(tone);
+
+            // check if no data retrieved
+            try {
+                data.get(0);
+            }
+            // catch if no tweets found
+            catch (IndexOutOfBoundsException ex) {
+                throw new DatabaseException("No Tweets Found");
+            }
+
+            return data;
+        } catch (BadSqlGrammarException ex) {
+            throw new DatabaseException("Bad Query");
+        }
     }
 
     /**
@@ -113,8 +134,26 @@ public class TweetSentimentService {
      * @param user
      * @return
      */
-    public ArrayList<TweetSentiment> findTweetsByUser(String user) {
-        return tweetSentimentMapper.findTweetsByUser(user);
+    public ArrayList<TweetSentiment> findTweetsByUser(String user) throws DatabaseException {
+        try {
+            // pull tweets from database
+            ArrayList<TweetSentiment> data = tweetSentimentMapper.findTweetsByUser(user);
+
+            // check if no data retrieved
+            try {
+                data.get(0);
+            }
+            // catch if no tweets found
+            catch (IndexOutOfBoundsException ex) {
+                throw new DatabaseException("No Tweets Found");
+            }
+
+            return data;
+        }
+        // catch bad query
+        catch (BadSqlGrammarException ex) {
+            throw new DatabaseException("Bad Query");
+        }
     }
 
     /**

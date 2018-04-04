@@ -1,12 +1,11 @@
 package twitter_sentiment.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import twitter_sentiment.exceptions.WatsonException;
 import twitter_sentiment.model.watson.ToneResponse;
 import twitter_sentiment.utilities.AuthUtil;
 
@@ -27,13 +26,15 @@ public class WatsonService {
      * @param query text to be analyzed
      * @return tone of given text
      */
-    public ToneResponse analyze(String query) {
+    public ToneResponse analyze(String query) throws WatsonException {
 
         // clean hashtag issues
         try {
             query = URLEncoder.encode(query, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        }
+        // throw exception
+        catch (UnsupportedEncodingException ex) {
+            throw new WatsonException(ex.getMessage(),HttpStatus.BAD_REQUEST);
         }
 
         // build url
@@ -43,10 +44,16 @@ public class WatsonService {
         HttpHeaders headers = authUtil.createWatsonHeader();
 
         // make API call
-        ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange(fquery, HttpMethod.GET, new HttpEntity(headers), ToneResponse.class);
+        try {
+            ResponseEntity<ToneResponse> fullResponse = restTemplate.exchange(fquery, HttpMethod.GET, new HttpEntity(headers), ToneResponse.class);
+            ToneResponse response = fullResponse.getBody();
+            return response;
+        }
+        // catch bad API call
+        catch (HttpClientErrorException ex) {
+            throw new WatsonException(ex.getMessage(),ex.getStatusCode());
+        }
 
-        // return response
-        ToneResponse response = fullResponse.getBody();
-        return response;
+
     }
 }
