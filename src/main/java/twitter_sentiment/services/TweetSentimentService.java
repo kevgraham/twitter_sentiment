@@ -1,19 +1,25 @@
 package twitter_sentiment.services;
 
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import twitter_sentiment.exceptions.DatabaseException;
 import twitter_sentiment.exceptions.TwitterException;
 import twitter_sentiment.exceptions.WatsonException;
 import twitter_sentiment.mappers.TweetSentimentMapper;
 import twitter_sentiment.model.internal.TweetSentiment;
+import twitter_sentiment.model.watson.ToneResponse;
 import twitter_sentiment.model.watson.ToneScore;
 import twitter_sentiment.model.twitter.Tweet;
+import twitter_sentiment.utilities.AuthUtil;
 import twitter_sentiment.utilities.CSVUtil;
 
 import java.util.ArrayList;
+import java.util.concurrent.*;
 
 @Service
 public class TweetSentimentService {
@@ -22,20 +28,30 @@ public class TweetSentimentService {
     TweetSentimentMapper tweetSentimentMapper;
 
     @Autowired
-    WatsonService sentimentService;
+    TwitterService twitterService;
 
     @Autowired
-    TwitterService twitterService;
+    RestTemplate restTemplate;
+
+    @Autowired
+    AuthUtil authUtil;
+
+    @Autowired
+    ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
      * Analyzes the most recent tweets of a given user
      * @param user twitter handle
-     * @return an ArrayList of watson data on tweets
+     * @param count number of tweets
+     * @return an ArrayList of sentiment data
      */
     public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) throws TwitterException, WatsonException {
 
         // build ArrayList of TweetSentiment
         ArrayList<TweetSentiment> output = new ArrayList<>();
+
+        // build ArrayList of Futures
+        ArrayList<Future<Pair<Tweet, ToneResponse>>> futures = new ArrayList<>();
 
         // pull recent tweets
         Tweet[] tweets = twitterService.recentTweets(user, count);
@@ -46,40 +62,75 @@ public class TweetSentimentService {
             // check if already in database
             TweetSentiment temp = tweetSentimentMapper.findSpecificTweet(tweets[i].getFull_text());
 
+            // start Watson API tasks for tweets not in database
             if (temp == null) {
+                System.out.println("getting from api with new thread...tweet " + i);
 
-                // get ToneScores for specific tweet
-                System.out.print("getting from api");
-                ToneScore[] tones = sentimentService.analyze(tweets[i].getFull_text()).getDocument_tone().getTones();
+                // create api call task
+                WatsonTask task = new WatsonTask(tweets[i], restTemplate, authUtil);
+
+                // submit to threadpool
+                Future<Pair<Tweet, ToneResponse>> future = threadPoolTaskExecutor.submit(task);
+
+                // add task to future list
+                futures.add(future);
+             }
+            // add TweetSentiment to result ArrayList from database (skip api call)
+            else {
+                System.out.println("getting from database...tweet " + i);
+                output.add(temp);
+            }
+        }
+
+        // get task results
+        for (int i = 0; i < futures.size(); i++) {
+            try {
+                // get result
+                Pair<Tweet, ToneResponse> response = futures.get(i).get();
+                System.out.println("retrieving result..." + response.getKey().getFull_text());
+
+                // parse response
+                Tweet tweet = response.getKey();
+                ToneResponse toneResponse = response.getValue();
+                ToneScore[] tones = toneResponse.getDocument_tone().getTones();
 
                 // map TweetSentiment Object
-                temp = mapTweetSentiment(tweets[i], tones);
+                TweetSentiment temp = mapTweetSentiment(tweet.getFull_text(), tones);
 
-                // add TweetSentiment to Tweet table
-                System.out.println("...adding to database");
-                tweetSentimentMapper.insertTweet(temp);
+                // add to resulting response
+                output.add(temp);
 
-                // add User to User table
-                if (tweetSentimentMapper.findUserByScreenName(tweets[i].getUser().getScreen_name()) == null) {
-                    tweetSentimentMapper.insertUser(tweets[i].getUser());
-                }
-
-                // add lookup entry to UserTweet table
-                int user_id = tweetSentimentMapper.findIdByScreenName(tweets[i].getUser().getScreen_name());
-                int tweet_id = tweetSentimentMapper.findIdByTweet(tweets[i].getFull_text());
-                tweetSentimentMapper.insertUserTweet(user_id, tweet_id);
-
-
-            } else {
-                System.out.println("getting from database");
+                // add TweetSentiment, User, UserTweet to database
+                cacheTweetSentiment(temp, tweet);
             }
-
-            // add TweetSentiment to result ArrayList
-            output.add(temp);
-
+            // catch threading exceptions
+            catch (InterruptedException | ExecutionException ex) {
+                throw new WatsonException("Watson API Error: ", HttpStatus.BAD_REQUEST);
+            }
         }
 
         return output;
+    }
+
+    /**
+     * Stores relational tweet sentiment and user data in database
+     * @param tweetSentiment
+     * @param tweet
+     */
+    public void cacheTweetSentiment(TweetSentiment tweetSentiment, Tweet tweet) {
+        // add TweetSentiment to Tweet table
+        System.out.println("adding to database..." + tweet.getFull_text());
+        tweetSentimentMapper.insertTweet(tweetSentiment);
+
+        // add User to User table
+        if (tweetSentimentMapper.findUserByScreenName(tweet.getUser().getScreen_name()) == null) {
+            tweetSentimentMapper.insertUser(tweet.getUser());
+        }
+
+        // add lookup entry to UserTweet table
+        int user_id = tweetSentimentMapper.findIdByScreenName(tweet.getUser().getScreen_name());
+        int tweet_id = tweetSentimentMapper.findIdByTweet(tweet.getFull_text());
+        tweetSentimentMapper.insertUserTweet(user_id, tweet_id);
     }
 
     /**
@@ -162,10 +213,10 @@ public class TweetSentimentService {
      * @param tones Array of ToneScores
      * @return
      */
-    public TweetSentiment mapTweetSentiment(Tweet tweet, ToneScore[] tones) {
+    public TweetSentiment mapTweetSentiment(String tweet, ToneScore[] tones) {
         TweetSentiment output = new TweetSentiment();
 
-        output.setTweet(tweet.getFull_text());
+        output.setTweet(tweet);
 
         for (ToneScore tone : tones) {
             String tone_id = tone.getTone_id();
