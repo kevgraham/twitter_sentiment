@@ -19,27 +19,18 @@ public class TweetSentimentController {
     @Autowired
     TweetSentimentService tweetSentimentService;
 
-    @Autowired
-    APIService apiService;
-
     /**
      * Analyzes the most recent tweets of a given user
      * @param user twitter handle
      * @return an ArrayList of sentiment data on tweets
      */
-
     @GetMapping("/tweets")
     public ArrayList<TweetSentiment> analyzeTweets(@RequestParam(value="apikey") String key,
                                                    @RequestParam(value="user") String user,
                                                    @RequestParam(value="count", required=false) Integer count)
-            throws APIKeyException, TwitterException, WatsonException {
+            throws TwitterException, WatsonException {
 
-        if (apiService.validateKey(key)) {
-            return tweetSentimentService.analyzeTweets(user, count);
-        }
-        else {
-            throw new APIKeyException(key);
-        }
+        return tweetSentimentService.analyzeTweets(user, count);
     }
 
     /**
@@ -48,14 +39,9 @@ public class TweetSentimentController {
      */
     @GetMapping("/congress")
     public ArrayList<TweetSentiment> analyzeCongress(@RequestParam(value="apikey") String key)
-            throws APIKeyException, TwitterException, WatsonException {
+            throws TwitterException, WatsonException {
 
-        if (apiService.validateKey(key)) {
-            return tweetSentimentService.analyzeCongress();
-        }
-        else {
-            throw new APIKeyException(key);
-        }
+        return tweetSentimentService.analyzeCongress();
     }
 
     /**
@@ -63,17 +49,11 @@ public class TweetSentimentController {
      * @param tone to query
      * @return an ArrayList of sentiment data on tweets
      */
-
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/tone/{tone}")
     public ArrayList<TweetSentiment> findTweetsByTone(@PathVariable String tone,
-                                                      @RequestParam(value="apikey") String key) throws APIKeyException, DatabaseException {
+                                                      @RequestParam(value="apikey") String key) throws DatabaseException {
 
-        if (apiService.validateKey(key)) {
-            return tweetSentimentService.findTweetsByTone(tone);
-        }
-        else {
-            throw new APIKeyException(key);
-        }
+        return tweetSentimentService.findTweetsByTone(tone);
     }
 
     /**
@@ -81,17 +61,11 @@ public class TweetSentimentController {
      * @param user to query
      * @return an ArrayList of sentiment data on tweets
      */
-
     @RequestMapping(method = RequestMethod.GET, value = "/retrieve/user/{user}")
     public ArrayList<TweetSentiment> findTweetsByUser(@PathVariable String user,
-                                                      @RequestParam(value="apikey") String key) throws APIKeyException, DatabaseException {
+                                                      @RequestParam(value="apikey") String key) throws DatabaseException {
 
-        if (apiService.validateKey(key)) {
-            return tweetSentimentService.findTweetsByUser(user);
-        }
-        else {
-            throw new APIKeyException(key);
-        }
+        return tweetSentimentService.findTweetsByUser(user);
     }
 
 }
