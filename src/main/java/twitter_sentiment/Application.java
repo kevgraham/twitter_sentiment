@@ -58,5 +58,7 @@ public class Application { //extends SpringBootServletInitializer {
 
     // Ryan: all in all this looks really good Kevin. Like really good. I could not find much to comment on.
     // Great work with exception handling and commenting your code thoroughly. It's clean, concise, easy to read and follow.
-    // Seriously nice work.
+    // Seriously nice work. You could add a bit of documentation into the README about how to deploy the application
+    // and any configurations that need to be made for it to work properly on a remote deployment or something along
+    // those lines - would give it a nice touch
 }
