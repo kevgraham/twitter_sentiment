@@ -30,6 +30,8 @@ public class TwitterService {
             count = 10;
         }
 
+        // Ryan: I'd suggest using a StringBuilder to build strings like the one below
+
         // build URL
         String baseURL = "https://api.twitter.com/1.1/statuses/user_timeline.json";
         String fullQuery = baseURL + "?tweet_mode=extended" + "&screen_name=" + username + "&count=" + count;

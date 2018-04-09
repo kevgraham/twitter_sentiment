@@ -14,4 +14,6 @@ public class WatsonException extends Exception {
     public HttpStatus getStatus() {
         return status;
     }
+
+    // Ryan: you'll want to add a toString()
 }

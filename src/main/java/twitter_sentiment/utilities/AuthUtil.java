@@ -17,6 +17,9 @@ import java.util.Comparator;
 
 public class AuthUtil {
 
+    // Ryan: I have lots of questions in here, but I know you basically copied it right? To get it to work?
+    // Do you why know why you had to?
+
     private ArrayList<Parameter> parameters = new ArrayList<>();
 
     private String method;

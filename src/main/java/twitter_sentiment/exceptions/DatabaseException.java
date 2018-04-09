@@ -6,4 +6,5 @@ public class DatabaseException extends Exception {
         super(message);
     }
 
+    // Ryan: you'll want to add a toString()
 }

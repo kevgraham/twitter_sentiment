@@ -55,4 +55,8 @@ public class Application { //extends SpringBootServletInitializer {
 //    protected SpringApplicationBuilder configure (SpringApplicationBuilder application){
 //        return application.sources(Application.class);
 //    }
+
+    // Ryan: all in all this looks really good Kevin. Like really good. I could not find much to comment on.
+    // Great work with exception handling and commenting your code thoroughly. It's clean, concise, easy to read and follow.
+    // Seriously nice work.
 }

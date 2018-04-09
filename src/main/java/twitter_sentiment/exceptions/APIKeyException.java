@@ -12,4 +12,6 @@ public class APIKeyException extends Exception {
         return key;
     }
 
+    // Ryan: you'll want to add a toString()
+
 }

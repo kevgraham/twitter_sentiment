@@ -69,6 +69,7 @@ public class TweetSentimentService {
                 // create api call task
                 WatsonTask task = new WatsonTask(tweets[i], restTemplate, authUtil);
 
+                // Ryan: very nice use of Futures!
                 // submit to threadpool
                 Future<Pair<Tweet, ToneResponse>> future = threadPoolTaskExecutor.submit(task);
 
@@ -112,6 +113,7 @@ public class TweetSentimentService {
         return output;
     }
 
+    // Ryan: technically, this isn't caching - it works for now but will be confusing once you also have caching enabled
     /**
      * Stores relational tweet sentiment and user data in database
      * @param tweetSentiment
