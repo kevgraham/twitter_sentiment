@@ -29,13 +29,15 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        // ensure api key is valid
+
         String key = request.getParameter("apikey");
 
+        // ensure api key is valid
         if (!apiService.validateKey(key)) {
             throw new APIKeyException(key);
         }
 
+        // ensure api key is under limit
         if (!apiService.checkThrottling(key)) {
             throw new RateLimitException("Rate Limit Exceeded", HttpStatus.BANDWIDTH_LIMIT_EXCEEDED);
         }

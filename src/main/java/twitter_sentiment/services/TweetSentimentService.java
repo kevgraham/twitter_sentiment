@@ -47,10 +47,10 @@ public class TweetSentimentService {
      */
     public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) throws TwitterException, WatsonException {
 
-        // build ArrayList of TweetSentiment
+        // ArrayList of TweetSentiment to return
         ArrayList<TweetSentiment> output = new ArrayList<>();
 
-        // build ArrayList of Futures
+        // ArrayList of Futures to hold task results
         ArrayList<Future<Pair<Tweet, ToneResponse>>> futures = new ArrayList<>();
 
         // pull recent tweets
@@ -82,10 +82,10 @@ public class TweetSentimentService {
             }
         }
 
-        // get task results
+        // iterate through results of tasks
         for (int i = 0; i < futures.size(); i++) {
             try {
-                // get result
+                // get task when complete
                 Pair<Tweet, ToneResponse> response = futures.get(i).get();
                 System.out.println("retrieving result..." + response.getKey().getFull_text());
 
@@ -97,10 +97,10 @@ public class TweetSentimentService {
                 // map TweetSentiment Object
                 TweetSentiment temp = mapTweetSentiment(tweet.getFull_text(), tones);
 
-                // add to resulting response
+                // add to output ArrayList
                 output.add(temp);
 
-                // add TweetSentiment, User, UserTweet to database
+                // add TweetSentiment, User, UserTweet to relational database tables
                 cacheTweetSentiment(temp, tweet);
             }
             // catch threading exceptions
@@ -169,13 +169,15 @@ public class TweetSentimentService {
             try {
                 data.get(0);
             }
-            // catch if no tweets found
+            // catch no tweets found
             catch (IndexOutOfBoundsException ex) {
                 throw new DatabaseException("No Tweets Found");
             }
 
             return data;
-        } catch (BadSqlGrammarException ex) {
+        }
+        // catch bad sql query
+        catch (BadSqlGrammarException ex) {
             throw new DatabaseException("Bad Query");
         }
     }
@@ -194,14 +196,14 @@ public class TweetSentimentService {
             try {
                 data.get(0);
             }
-            // catch if no tweets found
+            // catch no tweets found
             catch (IndexOutOfBoundsException ex) {
                 throw new DatabaseException("No Tweets Found");
             }
 
             return data;
         }
-        // catch bad query
+        // catch bad sql query
         catch (BadSqlGrammarException ex) {
             throw new DatabaseException("Bad Query");
         }

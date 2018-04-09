@@ -6,9 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import twitter_sentiment.model.internal.RootResponse;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -19,9 +21,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return JSON Error Message Response
      */
     @ExceptionHandler(value=APIKeyException.class)
-    protected ResponseEntity<Object> invalidKey(APIKeyException ex) {
-        String responseBody = "Invalid API Key: " + ex.getApikey();
-        return new ResponseEntity<>(responseBody, HttpStatus.CONFLICT);
+    protected @ResponseBody RootResponse invalidKey(APIKeyException ex) {
+        return new RootResponse("Invalid API Key: " + ex.getApikey(), HttpStatus.UNAUTHORIZED, null);
     }
 
     /**
@@ -30,9 +31,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return JSON Error Message Response
      */
     @ExceptionHandler(value=RateLimitException.class)
-    protected ResponseEntity<Object> rateLimitExceded(RateLimitException ex) {
-        String responseBody = "Rate Limit Exceeded";
-        return new ResponseEntity<>(responseBody, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED);
+    protected @ResponseBody RootResponse rateLimitExceeded(RateLimitException ex) {
+        return new RootResponse("Rate Limit Exceeded", HttpStatus.BANDWIDTH_LIMIT_EXCEEDED, null);
     }
 
     /**
@@ -41,9 +41,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return JSON Error Message Response
      */
     @ExceptionHandler(value=TwitterException.class)
-    protected ResponseEntity<Object> twitterError(TwitterException ex) {
-        String responseBody = "Twitter API Error: " + ex.getStatus();
-        return new ResponseEntity<>(responseBody, ex.getStatus());
+    protected @ResponseBody RootResponse twitterError(TwitterException ex) {
+        return new RootResponse("Twitter API Error", HttpStatus.BAD_REQUEST, null);
     }
 
     /**
@@ -52,9 +51,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return JSON Error Message Response
      */
     @ExceptionHandler(value=WatsonException.class)
-    protected ResponseEntity<Object> watsonError(WatsonException ex) {
-        String responseBody = "Watson API Error: " + ex.getStatus();
-        return new ResponseEntity<>(responseBody, ex.getStatus());
+    protected @ResponseBody RootResponse watsonError(WatsonException ex) {
+        return new RootResponse("Watson API Error", HttpStatus.BAD_REQUEST, null);
     }
 
     /**
@@ -63,9 +61,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      * @return JSON Error Message Response
      */
     @ExceptionHandler(value=DatabaseException.class)
-    protected ResponseEntity<Object> databaseError(DatabaseException ex) {
-        String responseBody = "Database Error: " + ex.getMessage();
-        return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+    protected @ResponseBody RootResponse databaseError(DatabaseException ex) {
+        return new RootResponse("Database Error: " + ex.getMessage() , HttpStatus.BAD_REQUEST, null);
     }
 
     /**
@@ -78,8 +75,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @Override
     protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        String responseBody = "Missing Parameter: " + ex.getParameterName();
-        return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        RootResponse response = new RootResponse("Missing Parameter: " + ex.getParameterName(), HttpStatus.BAD_REQUEST, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -92,8 +89,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @Override
     protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-        String responseBody = "Endpoint not found: " + ex.getRequestURL();
-        return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        RootResponse response = new RootResponse("Endpoint Not Found: " + ex.getRequestURL(), HttpStatus.BAD_REQUEST, null);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
 }
