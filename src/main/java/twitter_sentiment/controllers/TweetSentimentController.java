@@ -2,12 +2,10 @@ package twitter_sentiment.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import twitter_sentiment.exceptions.APIKeyException;
 import twitter_sentiment.exceptions.DatabaseException;
 import twitter_sentiment.exceptions.TwitterException;
 import twitter_sentiment.exceptions.WatsonException;
 import twitter_sentiment.model.internal.TweetSentiment;
-import twitter_sentiment.services.APIService;
 import twitter_sentiment.services.TweetSentimentService;
 
 import java.util.ArrayList;

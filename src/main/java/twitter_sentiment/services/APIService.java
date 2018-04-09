@@ -4,13 +4,20 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import twitter_sentiment.mappers.APIMapper;
+import twitter_sentiment.mappers.RequestsMapper;
 import twitter_sentiment.model.internal.APIKey;
 
 @Service
 public class APIService {
 
+    final long LIMIT_TIME = 60000; // 1 minute in milliseconds
+    final int LIMIT_COUNT = 5; // max calls per LIMIT_TIME
+
     @Autowired
     APIMapper apiMapper;
+
+    @Autowired
+    RequestsMapper requestsMapper;
 
     /**
      * Creates an api key for the given owner and adds to database
@@ -70,5 +77,26 @@ public class APIService {
                 Base64.encodeBase64String(user);
 
         return key;
+    }
+
+    /**
+     * Determines if the given API Key is under the Rate Limit
+     * @param key to check
+     * @return true if under limit, false if limit exceeded
+     */
+    public boolean checkThrottling(String key) {
+
+        // apikey of requestor
+        int apikey_id = apiMapper.findIdByKey(key).getId();
+
+        // timestamp boundary starting at LIMIT_TIME ago
+        String timestamp = String.valueOf(System.currentTimeMillis() - LIMIT_TIME);
+
+        // check for too many calls
+        if (requestsMapper.findRecentRequests(timestamp, apikey_id).size() >= LIMIT_COUNT ) {
+            return false;
+        }
+
+        return true;
     }
 }

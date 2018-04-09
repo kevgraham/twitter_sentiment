@@ -17,4 +17,7 @@ public interface APIMapper {
     @Select("SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `key` = #{key} AND `active` = 1")
     public APIKey findActiveKey(String key);
 
+    @Select("SELECT * FROM `TwitterSentiment`.`ApiKeys` WHERE `key` = #{key} ")
+    public APIKey findIdByKey(String key);
+
 }

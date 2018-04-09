@@ -3,16 +3,12 @@ package twitter_sentiment.exceptions;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.ClassUtils;
-import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import javax.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -26,6 +22,17 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> invalidKey(APIKeyException ex) {
         String responseBody = "Invalid API Key: " + ex.getApikey();
         return new ResponseEntity<>(responseBody, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Rate Limited Exceeded Exception
+     * @param ex RateLimitException
+     * @return JSON Error Message Response
+     */
+    @ExceptionHandler(value=RateLimitException.class)
+    protected ResponseEntity<Object> rateLimitExceded(RateLimitException ex) {
+        String responseBody = "Rate Limit Exceeded";
+        return new ResponseEntity<>(responseBody, HttpStatus.BANDWIDTH_LIMIT_EXCEEDED);
     }
 
     /**
