@@ -1,5 +1,6 @@
 package twitter_sentiment.model.internal;
 
+
 public class TweetSentiment {
 
     private String tweet = "";
