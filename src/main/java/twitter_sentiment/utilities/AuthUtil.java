@@ -70,26 +70,28 @@ public class AuthUtil {
     }
 
     /**
-     * Creates a Header with oAuth1 Authorization for the Twitter API
+     * Creates a Header with OAuth1 Authorization for the Twitter API
      * @param baseURL
      * @param user
      * @return
      */
     public HttpHeaders createTwitterHeader(String baseURL, String user, int count) {
 
+        // set default values
         this.method = "GET";
         this.baseURL = baseURL;
-
         this.oAuthNonce = String.valueOf(new SecureRandom().nextLong());
         this.oAuthSignatureMethod = "HMAC-SHA1";
         this.oAuthTimeStamp = String.valueOf(System.currentTimeMillis() / 1000);
         this.oAuthVersion = "1.0";
 
-        // build parameter String
-        buildParams(user, count);
+        // build parameter list
+        this.parameters = buildParams(user, count);
 
+        // build signature String
         this.oAuthSignature = getSignature();
 
+        // build authorization String
         this.authorization = getAuthorization();
 
         // create header
@@ -99,7 +101,13 @@ public class AuthUtil {
         return headers;
     }
 
-    private void buildParams(String user, int count) {
+    /**
+     * Builds an ArrayList of Parameters based on OAuth Specification
+     * @param user query parameter
+     * @param count query parameter
+     * @return ArrayList of encoded, sorted parameters
+     */
+    private ArrayList<Parameter> buildParams(String user, int count) {
         // add encoded parameters
         parameters = new ArrayList<>();
         parameters.add(new Parameter("tweet_mode", encode("extended")));
@@ -118,8 +126,15 @@ public class AuthUtil {
                 return p1.getKey().compareTo(p2.getKey());
             }
         });
+
+        return parameters;
     }
 
+    /**
+     * URL encodes the given String
+     * @param str to encode
+     * @return encoded String
+     */
     private String encode(String str) {
         String encoded = str;
 
@@ -135,6 +150,10 @@ public class AuthUtil {
         return encoded;
     }
 
+    /**
+     * Builds Signature Base String based on OAuth Specification
+     * @return Signature Base String
+     */
     private String getSignatureBase() {
 
         StringBuilder paramsString = new StringBuilder();
@@ -158,6 +177,10 @@ public class AuthUtil {
         return baseString.toString();
     }
 
+    /**
+     * Builds a Signature String based on OAuth Specification
+     * @return Signature String
+     */
     private String getSignature() {
         String baseString = getSignatureBase();
 
@@ -178,6 +201,10 @@ public class AuthUtil {
         return "";
     }
 
+    /**
+     * Builds Authorization String based on OAuth Specification
+     * @return Authorization String
+     */
     private String getAuthorization() {
         StringBuilder buf = new StringBuilder();
         buf.append("OAuth ");
@@ -213,6 +240,9 @@ public class AuthUtil {
         return buf.toString();
     }
 
+    /**
+     * A simple key value class to hold parameters
+     */
     private class Parameter {
 
         private final String key;

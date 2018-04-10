@@ -22,7 +22,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(value=APIKeyException.class)
     protected @ResponseBody RootResponse invalidKey(APIKeyException ex) {
-        return new RootResponse("Invalid API Key: " + ex.getApikey(), HttpStatus.UNAUTHORIZED, null);
+        return new RootResponse(ex.getMessage() + " - " + ex.getKey(), HttpStatus.UNAUTHORIZED, null);
     }
 
     /**

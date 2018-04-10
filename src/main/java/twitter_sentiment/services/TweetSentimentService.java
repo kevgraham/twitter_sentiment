@@ -1,7 +1,11 @@
 package twitter_sentiment.services;
 
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -24,6 +28,8 @@ import java.util.concurrent.*;
 @Service
 public class TweetSentimentService {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     TweetSentimentMapper tweetSentimentMapper;
 
@@ -37,6 +43,9 @@ public class TweetSentimentService {
     AuthUtil authUtil;
 
     @Autowired
+    CSVUtil csvUtil;
+
+    @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
@@ -47,7 +56,7 @@ public class TweetSentimentService {
      */
     public ArrayList<TweetSentiment> analyzeTweets(String user, Integer count) throws TwitterException, WatsonException {
 
-        // ArrayList of TweetSentiment to return
+        // ArrayList of TweetSentiments to return
         ArrayList<TweetSentiment> output = new ArrayList<>();
 
         // ArrayList of Futures to hold task results
@@ -64,7 +73,7 @@ public class TweetSentimentService {
 
             // start Watson API tasks for tweets not in database
             if (temp == null) {
-                System.out.println("getting from api with new thread...tweet " + i);
+                logger.info("getting from api with new thread...");
 
                 // create api call task
                 WatsonTask task = new WatsonTask(tweets[i], restTemplate, authUtil);
@@ -77,7 +86,7 @@ public class TweetSentimentService {
              }
             // add TweetSentiment to result ArrayList from database (skip api call)
             else {
-                System.out.println("getting from database...tweet " + i);
+                logger.info("getting from database...");
                 output.add(temp);
             }
         }
@@ -87,7 +96,7 @@ public class TweetSentimentService {
             try {
                 // get task when complete
                 Pair<Tweet, ToneResponse> response = futures.get(i).get();
-                System.out.println("retrieving result..." + response.getKey().getFull_text());
+                logger.info("retrieving thread result...");
 
                 // parse response
                 Tweet tweet = response.getKey();
@@ -101,7 +110,7 @@ public class TweetSentimentService {
                 output.add(temp);
 
                 // add TweetSentiment, User, UserTweet to relational database tables
-                cacheTweetSentiment(temp, tweet);
+                saveTweetSentiment(temp, tweet);
             }
             // catch threading exceptions
             catch (InterruptedException | ExecutionException ex) {
@@ -117,9 +126,9 @@ public class TweetSentimentService {
      * @param tweetSentiment
      * @param tweet
      */
-    public void cacheTweetSentiment(TweetSentiment tweetSentiment, Tweet tweet) {
+    public void saveTweetSentiment(TweetSentiment tweetSentiment, Tweet tweet) {
         // add TweetSentiment to Tweet table
-        System.out.println("adding to database..." + tweet.getFull_text());
+        logger.info("adding to database...");
         tweetSentimentMapper.insertTweet(tweetSentiment);
 
         // add User to User table
@@ -139,8 +148,8 @@ public class TweetSentimentService {
      */
     public ArrayList<TweetSentiment> analyzeCongress() throws TwitterException, WatsonException {
 
-        // load twitter handles from csv
-        ArrayList<String> twitterHandles = CSVUtil.loadTwitterHandles();
+        // get twitter handles from csv
+        ArrayList<String> twitterHandles = csvUtil.getTwitterHandles();
 
         // analyze twitter for each twitter handle
         ArrayList<TweetSentiment> result = new ArrayList<>();
@@ -160,9 +169,11 @@ public class TweetSentimentService {
      * @param tone to query
      * @return an ArrayList of tweet sentiment data
      */
+    @Cacheable(value="tweets")
     public ArrayList<TweetSentiment> findTweetsByTone(String tone) throws DatabaseException {
         try {
             // pull tweets from database
+            logger.info("pulling tweets from database...");
             ArrayList<TweetSentiment> data = tweetSentimentMapper.findTweetsByTone(tone);
 
             // check if no data retrieved
@@ -171,6 +182,7 @@ public class TweetSentimentService {
             }
             // catch no tweets found
             catch (IndexOutOfBoundsException ex) {
+                logger.error("no tweets found");
                 throw new DatabaseException("No Tweets Found");
             }
 
@@ -178,6 +190,7 @@ public class TweetSentimentService {
         }
         // catch bad sql query
         catch (BadSqlGrammarException ex) {
+            logger.error("bad query");
             throw new DatabaseException("Bad Query");
         }
     }
@@ -187,9 +200,11 @@ public class TweetSentimentService {
      * @param user
      * @return
      */
+    @Cacheable(value="tweets")
     public ArrayList<TweetSentiment> findTweetsByUser(String user) throws DatabaseException {
         try {
             // pull tweets from database
+            logger.info("pulling tweets from database");
             ArrayList<TweetSentiment> data = tweetSentimentMapper.findTweetsByUser(user);
 
             // check if no data retrieved
@@ -198,6 +213,7 @@ public class TweetSentimentService {
             }
             // catch no tweets found
             catch (IndexOutOfBoundsException ex) {
+                logger.error("no tweets found");
                 throw new DatabaseException("No Tweets Found");
             }
 
@@ -205,6 +221,7 @@ public class TweetSentimentService {
         }
         // catch bad sql query
         catch (BadSqlGrammarException ex) {
+            logger.error("bad query");
             throw new DatabaseException("Bad Query");
         }
     }

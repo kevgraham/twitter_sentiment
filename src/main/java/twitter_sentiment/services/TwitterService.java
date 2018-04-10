@@ -1,5 +1,7 @@
 package twitter_sentiment.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,11 +14,13 @@ import twitter_sentiment.utilities.AuthUtil;
 @Service
 public class TwitterService {
 
-    @Autowired
-    RestTemplate restTemplate;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    AuthUtil authUtil;
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private AuthUtil authUtil;
 
     /**
      * Gets an array of recent tweets for the given username
@@ -50,6 +54,7 @@ public class TwitterService {
         }
         // catch bad API call
         catch (HttpClientErrorException ex) {
+            logger.error("bad twitter api request");
             throw new TwitterException(ex.getMessage(), ex.getStatusCode());
         }
 

@@ -1,8 +1,11 @@
 package twitter_sentiment.services;
 
 import org.apache.tomcat.util.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import twitter_sentiment.exceptions.APIKeyException;
 import twitter_sentiment.mappers.APIMapper;
 import twitter_sentiment.mappers.RequestsMapper;
 import twitter_sentiment.model.internal.APIKey;
@@ -10,6 +13,7 @@ import twitter_sentiment.model.internal.APIKey;
 @Service
 public class APIService {
 
+    final Logger logger = LoggerFactory.getLogger(getClass());
     final long LIMIT_TIME = 60000; // 1 minute in milliseconds
     final int LIMIT_COUNT = 5; // max calls per LIMIT_TIME
 
@@ -24,12 +28,12 @@ public class APIService {
      * @param owner String name
      * @return an APIKey Object of the generated key
      */
-    public APIKey insertKey(String owner) {
+    public APIKey insertKey(String owner) throws APIKeyException {
 
         // check if owner taken
         if (apiMapper.findKeyByOwner(owner) != null) {
-            // TODO make exception
-            return null;
+            logger.error("username taken");
+            throw new APIKeyException("Key Not Generated", "Username Taken");
         }
 
         // generate key and make sure its unique

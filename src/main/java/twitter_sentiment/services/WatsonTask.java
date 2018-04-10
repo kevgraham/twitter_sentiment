@@ -1,6 +1,8 @@
 package twitter_sentiment.services;
 
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -15,7 +17,7 @@ import java.util.concurrent.Callable;
 
 
 public class WatsonTask implements Callable<Pair<Tweet, ToneResponse>> {
-
+    private Logger logger = LoggerFactory.getLogger(getClass());
     private RestTemplate restTemplate;
     private AuthUtil authUtil;
     private Tweet tweet;
@@ -35,6 +37,7 @@ public class WatsonTask implements Callable<Pair<Tweet, ToneResponse>> {
         }
         // throw exception
         catch (UnsupportedEncodingException ex) {
+            logger.error("could not encode watson query");
             throw new WatsonException(ex.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
@@ -53,6 +56,7 @@ public class WatsonTask implements Callable<Pair<Tweet, ToneResponse>> {
         }
         // catch bad API call
         catch (HttpClientErrorException ex) {
+            logger.error("bad watson api request");
             throw new WatsonException(ex.getMessage(),ex.getStatusCode());
         }
     }

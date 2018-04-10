@@ -2,6 +2,7 @@ package twitter_sentiment.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import twitter_sentiment.exceptions.APIKeyException;
 import twitter_sentiment.model.internal.APIKey;
 import twitter_sentiment.services.APIService;
 
@@ -17,7 +18,7 @@ public class APIController {
      * @return an APIKey Object with validated credentials
      */
     @PostMapping("/apikey")
-    public APIKey createKey(@RequestParam(value="owner") String owner) {
+    public APIKey createKey(@RequestParam(value="owner") String owner) throws APIKeyException {
         return apiService.insertKey(owner);
     }
 

@@ -3,6 +3,7 @@ package twitter_sentiment;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
@@ -10,6 +11,7 @@ import twitter_sentiment.utilities.AuthUtil;
 import twitter_sentiment.utilities.CSVUtil;
 
 @SpringBootApplication
+@EnableCaching
 public class Application { //extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
