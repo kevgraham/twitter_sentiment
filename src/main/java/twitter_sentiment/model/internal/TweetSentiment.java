@@ -12,6 +12,13 @@ public class TweetSentiment {
     private double confident = 0;
     private double tentative = 0;
 
+    public TweetSentiment() {
+    }
+
+    public TweetSentiment(String tweet) {
+        this.tweet = tweet;
+    }
+
     public String getTweet() {
         return tweet;
     }

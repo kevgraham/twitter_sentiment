@@ -12,6 +12,14 @@ A detectable tone is one of the following:
 * Confident
 * Tentative
 
+## Tech Stack
+- Java 8
+- Maven
+- Spring Boot
+- MyBatis
+- MySQL
+- Ehcache
+
 ## Endpoints
 
 ```
@@ -40,3 +48,5 @@ Pulls tweets for all members of Congress (warning: there are hundreds of twitter
 /apikey?owner={name}
 ```
 POST: Generates a new API Key
+
+## Deployment
