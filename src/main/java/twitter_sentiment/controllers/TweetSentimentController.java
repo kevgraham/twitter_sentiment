@@ -20,6 +20,15 @@ public class TweetSentimentController {
     TweetSentimentService tweetSentimentService;
 
     /**
+     * Health Check for AWS Load Balancer
+     * @return true if server running
+     */
+    @GetMapping("/")
+    public boolean healthCheck() {
+        return true;
+    }
+
+    /**
      * Analyzes the most recent tweets of a given user
      * @param user twitter handle
      * @return an ArrayList of sentiment data on tweets

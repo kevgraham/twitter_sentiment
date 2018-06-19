@@ -46,9 +46,11 @@ public class TwitterService {
         // create new header with authorization String
         HttpHeaders headers = authUtil.createTwitterHeader(baseURL, username, count);
 
+
         // make API call
         try {
             ResponseEntity<Tweet[]> fullResponse = restTemplate.exchange(fullQuery, HttpMethod.GET, new HttpEntity(headers), Tweet[].class);
+
             Tweet[] response = fullResponse.getBody();
             return response;
         }
